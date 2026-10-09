@@ -1,0 +1,487 @@
+<meta charset="utf-8">
+<title>Health Tower Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap">
+<style>
+/* Paleta institucional CIMAT: guinda, verde bosque, dorado y arena sobre fondo gris verdoso.
+   Composición: encabezado, selector de vista y un diagrama interactivo con panel de detalle. */
+:root{--title:#155B4E;--font-body:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+--bg:#F1F3F2;--surface:#FFFFFF;--surface-2:#F6F5F3;--fg:#2F3733;--muted:#5F6A65;--line:#D6DCD9;
+--slate:#2F3733;--on-slate:#F4F6F5;--on-slate-2:#B9C4BE;--on-slate-3:rgba(244,246,245,.38);
+--guinda:#691035;--on-guinda:#FFFFFF;--guinda-ink:#691035;--verde:#155B4E;--on-verde:#FFFFFF;--dorado:#A98A33;--on-dorado:#1E1A0D}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--surface:#1B211E;--surface-2:#232A27;--fg:#E8ECE9;--muted:#9EA9A3;--line:#36413C;
+--slate:#2B3531;--on-slate:#F1F4F2;--on-slate-2:#AEBBB4;--on-slate-3:rgba(241,244,242,.35);
+--guinda:#A02D5B;--guinda-ink:#EE8FB3;--verde:#1F8470;--dorado:#C9A84A;--title:#6FD1BC;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--surface:#1B211E;--surface-2:#232A27;--fg:#E8ECE9;--muted:#9EA9A3;--line:#36413C;
+--slate:#2B3531;--on-slate:#F1F4F2;--on-slate-2:#AEBBB4;--on-slate-3:rgba(241,244,242,.35);
+--guinda:#A02D5B;--guinda-ink:#EE8FB3;--verde:#1F8470;--dorado:#C9A84A;--title:#6FD1BC;color-scheme:dark}
+
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;padding-inline:max(16px,3vw);padding-block:28px 48px;-webkit-text-size-adjust:100%}
+.app{max-width:1200px;margin-inline:auto;display:grid;gap:22px}
+.top{display:grid;gap:10px;min-width:0}
+.eyebrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--guinda-ink)}
+.eyebrow i{font-style:normal;background:var(--guinda);color:var(--on-guinda);padding:3px 11px;border-radius:999px;letter-spacing:.09em}
+h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1.1;font-weight:700;letter-spacing:-.01em;text-wrap:balance;color:var(--title)}
+.sub{margin:0;max-width:68ch;font-size:clamp(15px,2vw,17px);color:var(--fg)}
+.sub b{color:var(--guinda-ink)}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);justify-self:start;max-width:100%;flex-wrap:wrap}
+.tabs button{border:0;background:none;padding:8px 18px;border-radius:999px;font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button:hover{color:var(--fg)}
+.tabs button[aria-selected="true"]{background:var(--guinda);color:var(--on-guinda)}
+.tabs button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.view[hidden]{display:none}
+figure{margin:0;min-width:0}
+figcaption{margin-top:14px;font-size:13px;color:var(--muted);max-width:80ch}
+.diagram{overflow-x:auto;padding:4px 2px 2px}
+.foot{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.foot b{color:var(--fg)}
+</style>
+<style>
+/* Health Tower Intelligence — estilos de los diagramas (usa los tokens del host) */
+.hti{--gap:14px;--fs:13.5px;--fs-s:11.5px;position:relative;font-family:var(--font-body,'Noto Sans',system-ui,sans-serif);color:var(--fg);font-size:var(--fs);line-height:1.35}
+.hti *,.hti *::before,.hti *::after{box-sizing:border-box}
+.hti button{font:inherit;color:inherit}
+.hti small{display:block;font-size:var(--fs-s);color:var(--muted)}
+.hti-compact{--gap:10px;--fs:12.5px;--fs-s:10.5px}
+.hti-compact .hti-row{grid-template-columns:70px minmax(0,1fr);gap:10px}
+.hti-compact .hti-tower{padding:7px 16px}
+.hti-compact .hti-tower b{font-size:calc(var(--fs) + 3px)}
+.hti-compact .hti-domain header{padding:5px 12px}
+.hti-compact .hti-projs{padding:6px;gap:5px}
+.hti-compact .hti-proj{padding:4px 8px;gap:8px}
+.hti-compact .hti-num{width:23px;height:23px;font-size:11.5px}
+.hti-compact .hti-chip{padding:3px 9px;font-size:11px}
+.hti-compact .hti-data,.hti-compact .hti-tdata{padding:7px 12px;gap:6px 12px}
+.hti-compact .hti-sources,.hti-compact .hti-engines{gap:6px}
+.hti-compact .hti-data-t{font-size:11.5px}
+.hti-compact .hti-troot{padding:7px 22px}
+.hti-compact .hti-tnode{padding:6px 12px}
+.hti-compact .hti-tleaves{gap:5px;margin-left:30px}
+.hti-compact.hti-tree .hti-proj{padding:4px 8px}
+.hti-compact.hti-tree .hti-stage{gap:26px}
+.hti-compact .hti-legend{position:absolute;right:0;top:-20px;margin:0}
+
+.tone-guinda{--t:var(--guinda);--on:var(--on-guinda)}
+.tone-verde{--t:var(--verde);--on:var(--on-verde)}
+.tone-dorado{--t:var(--dorado);--on:var(--on-dorado)}
+.hti[data-tone="guinda"]{--act:var(--guinda)}
+.hti[data-tone="verde"]{--act:var(--verde)}
+.hti[data-tone="dorado"]{--act:var(--dorado)}
+
+.hti-stage{position:relative;display:grid;gap:var(--gap)}
+.hti-arq .hti-stage{row-gap:30px}
+.hti-arq.hti-compact .hti-stage{row-gap:22px}
+.hti-row{display:grid;grid-template-columns:78px minmax(0,1fr);gap:12px;align-items:center}
+.hti-tag{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;line-height:1.2}
+
+/* Links */
+.hti-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2}
+.hti-links path{fill:none;stroke-linecap:round}
+.hti-links .base{stroke:var(--line);stroke-width:1.6}
+.hti-links .hot{stroke:var(--t);stroke-width:2.6;stroke-dasharray:1;stroke-dashoffset:1;animation:hti-draw .8s cubic-bezier(.3,.7,.2,1) forwards}
+@keyframes hti-draw{to{stroke-dashoffset:0}}
+
+/* Torre */
+.hti-tower{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;background:var(--slate);color:var(--on-slate);border-radius:14px;padding:11px 18px;border-bottom:4px solid var(--dorado)}
+.hti-tower b{font-size:calc(var(--fs) + 4px);letter-spacing:.01em;display:block}
+.hti-tower small{color:var(--on-slate-2)}
+.hti-tower-c{display:flex;gap:6px;flex-wrap:wrap}
+.hti-tower-c span{font-size:var(--fs-s);padding:4px 10px;border-radius:999px;border:1px solid var(--on-slate-3);color:var(--on-slate)}
+
+/* Dominios */
+.hti-domains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap);align-items:stretch}
+.hti-domain{border:1.5px solid var(--t);border-radius:14px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column;transition:opacity .3s,box-shadow .3s}
+.hti-domain header{background:var(--t);color:var(--on);padding:8px 14px}
+.hti-domain header b{display:block;font-size:calc(var(--fs) + 1px)}
+.hti-domain header small{color:inherit;opacity:.85}
+.hti-projs{display:grid;gap:6px;padding:8px;align-content:start;flex:1}
+
+/* Tarjeta de proyecto */
+.hti-proj{position:relative;display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;transition:opacity .3s,border-color .2s,box-shadow .2s,transform .2s}
+.hti-proj:hover{border-color:var(--t)}
+.hti-proj:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.hti-proj.is-active{border-color:var(--t);box-shadow:0 0 0 2px var(--t);background:var(--surface);transform:translateX(2px)}
+.hti-num{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--t);color:var(--on);font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums}
+.hti-pt{min-width:0}
+.hti-pt b{display:block;font-size:var(--fs)}
+.hti-pt small{overflow-wrap:anywhere}
+.hti-top3{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--dorado);box-shadow:0 0 0 2px var(--surface)}
+
+/* Chips: motores y fuentes */
+.hti-engines,.hti-sources{display:flex;gap:8px;flex-wrap:wrap}
+.hti-engines .hti-chip{flex:1 1 150px;text-align:center}
+.hti-chip{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:calc(var(--fs) - .5px);transition:opacity .3s,background .2s,border-color .2s,color .2s;white-space:nowrap}
+.hti-chip.is-on{border-color:var(--act,var(--fg));background:var(--act,var(--fg));color:var(--on-act,#fff);font-weight:600}
+.hti[data-tone="dorado"]{--on-act:var(--on-dorado)}
+.hti[data-tone="guinda"]{--on-act:var(--on-guinda)}
+.hti[data-tone="verde"]{--on-act:var(--on-verde)}
+.hti-data,.hti-tdata{border:1.5px dashed var(--muted);border-radius:14px;padding:10px 14px;background:var(--surface-2);display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}
+.hti-data-t{font-weight:700;font-size:calc(var(--fs) - .5px);flex:none}
+.hti-sources{flex:1 1 320px}
+
+.is-dim{opacity:.42}
+.is-dim.hti-proj:hover,.is-dim.hti-proj:focus-visible{opacity:1}
+
+/* Árbol */
+.hti-tree .hti-stage{gap:calc(var(--gap) + 12px)}
+.hti-troot{justify-self:center;text-align:center;background:var(--guinda);color:var(--on-guinda);border-radius:14px;padding:12px 26px;border-bottom:4px solid var(--dorado);max-width:100%}
+.hti-troot b{display:block;font-size:calc(var(--fs) + 5px)}
+.hti-troot small{color:inherit;opacity:.85}
+.hti-tdomains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(var(--gap) + 12px);align-items:start}
+.hti-tcol{display:grid;gap:calc(var(--gap) - 2px);align-content:start}
+.hti-tnode{background:var(--t);color:var(--on);border-radius:12px;padding:9px 14px;text-align:center;transition:opacity .3s}
+.hti-tnode b{display:block;font-size:calc(var(--fs) + 1.5px)}
+.hti-tnode small{color:inherit;opacity:.88}
+.hti-tleaves{display:grid;gap:8px;margin-left:34px}
+.hti-tree .hti-proj{padding:9px 12px}
+.hti-tree .hti-pt small{line-height:1.3}
+.hti-tdata{justify-content:flex-start}
+
+/* Leyenda */
+.hti-legend{display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:var(--fs-s);color:var(--muted);margin-top:calc(var(--gap) - 2px)}
+.hti-legend i{width:10px;height:10px;border-radius:50%;background:var(--dorado);flex:none}
+
+/* Panel de detalle */
+.hti-panel{margin-top:calc(var(--gap) - 4px);background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--act,var(--t,var(--guinda)));border-radius:14px;padding:14px 18px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.5fr) minmax(0,1.2fr);gap:12px 24px;align-items:start}
+.hti-panel.hti-swap{animation:hti-in .45s ease both}
+@keyframes hti-in{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hti-pn-head{display:flex;gap:12px;align-items:flex-start}
+.hti-pn-head .hti-num{width:34px;height:34px;font-size:16px}
+.hti-pn-dom{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hti-pn-dom em{font-style:normal;color:var(--guinda-ink)}
+.hti-pn-name{font-weight:700;font-size:calc(var(--fs) + 3px);line-height:1.25;margin:2px 0}
+.hti-pn-caps{font-size:var(--fs-s);color:var(--muted)}
+.hti-pn-body{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+.hti-panel h4{margin:0 0 3px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hti-panel p{margin:0;font-size:var(--fs);line-height:1.45}
+.hti-kpis{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.hti-kpis span{font-size:var(--fs-s);padding:2px 9px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.hti-panel code{display:block;font-family:ui-monospace,'SF Mono','Cascadia Mono',Menlo,monospace;font-size:var(--fs-s);padding:6px 9px;border-radius:8px;background:var(--surface-2);color:var(--fg);overflow-wrap:anywhere}
+.hti-compact .hti-panel{margin-top:4px;padding:8px 14px;gap:6px 20px;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr) minmax(0,1.1fr)}
+.hti-compact .hti-pn-name{font-size:calc(var(--fs) + 1.5px)}
+.hti-compact .hti-pn-body{gap:10px 14px}
+.hti-compact .hti-kpis{margin-bottom:5px;gap:4px}
+.hti-compact .hti-kpis span{padding:1px 7px}
+.hti-compact .hti-panel code{padding:4px 7px}
+.hti-compact .hti-panel p{font-size:calc(var(--fs) - .5px)}
+.hti-compact .hti-pn-head .hti-num{width:30px;height:30px;font-size:14px}
+.hti-compact .hti-panel p{line-height:1.35}
+.hti-play{display:block;margin:10px 0 0 auto;padding:5px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:11.5px;cursor:pointer}
+.hti-play:hover{color:var(--fg);border-color:var(--fg)}
+.hti-play:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.hti-compact .hti-play{position:absolute;right:0;bottom:-34px;margin:0;display:none}
+
+/* Responsivo */
+@media (max-width:860px){
+  .hti-row{grid-template-columns:minmax(0,1fr);gap:6px}
+  .hti-tag{text-align:left}
+  .hti-domains,.hti-tdomains{grid-template-columns:minmax(0,1fr)}
+  .hti-links{display:none}
+  .hti-panel{grid-template-columns:minmax(0,1fr)}
+  .hti-pn-body{grid-template-columns:minmax(0,1fr)}
+  .hti-tleaves{margin-left:0}
+  .hti-chip{white-space:normal}
+  .hti-engines .hti-chip{flex:1 1 140px}
+}
+@media (prefers-reduced-motion:reduce){
+  .hti-links .hot{animation:none;stroke-dashoffset:0}
+  .hti-panel.hti-swap{animation:none}
+  .hti-proj,.hti-chip,.hti-domain{transition:none}
+}
+
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="eyebrow">Propuesta de proyecto <i>MIUS Medical</i></div>
+    <h1>Health Tower Intelligence</h1>
+    <p class="sub"><b>MIUS Health Intelligence Platform:</b> una plataforma de datos, tres dominios y ocho proyectos que terminan en una sola torre de control. Elige un proyecto para ver por dónde pasan sus datos.</p>
+    <div class="tabs" role="tablist" aria-label="Vista del diagrama">
+      <button id="tab-arq" role="tab" aria-selected="true" aria-controls="v-arq" type="button">Arquitectura</button>
+      <button id="tab-tree" role="tab" aria-selected="false" aria-controls="v-tree" type="button">Del programa a los 8 proyectos</button>
+    </div>
+  </header>
+
+  <section class="view" id="v-arq" role="tabpanel" aria-labelledby="tab-arq">
+    <figure>
+      <div class="diagram"><div id="d-arq" role="group" aria-label="Arquitectura de la plataforma: datos, motores analíticos, proyectos por dominio y torre de control"></div></div>
+      <figcaption>Los datos de MIUS suben por la capa de motores analíticos hasta los proyectos de cada dominio. La torre de control reúne sus resultados en KPIs, alertas y recomendaciones.</figcaption>
+    </figure>
+  </section>
+
+  <section class="view" id="v-tree" role="tabpanel" aria-labelledby="tab-tree" hidden>
+    <figure>
+      <div class="diagram"><div id="d-tree" role="group" aria-label="Árbol del programa general hacia los tres dominios y los ocho proyectos"></div></div>
+      <figcaption>El programa general se divide en tres dominios y ocho proyectos. Los tres primeros, marcados con punto dorado, son la propuesta para una primera reunión.</figcaption>
+    </figure>
+  </section>
+
+  <footer class="foot">
+    <span><b>Capacidades CIMAT:</b> ciencia de datos, estadística, optimización, aprendizaje automático, PLN, visión computacional y desarrollo de software.</span>
+  </footer>
+</div>
+
+<script>
+/* Health Tower Intelligence — diagramas interactivos (arquitectura y árbol de proyectos)
+   Módulo compartido por la presentación HTML y el artefacto. Sin dependencias. */
+(function (g) {
+  'use strict';
+
+  var DOMAINS = [
+    { id: 'D1', name: 'Demanda y Comercial', sub: 'Qué comprar, qué vender y a quién', tone: 'dorado', projects: ['P1', 'P8', 'P5'] },
+    { id: 'D2', name: 'Logística y Red Fría', sub: 'Almacén, transporte y temperatura', tone: 'verde', projects: ['P2', 'P4', 'P7'] },
+    { id: 'D3', name: 'Equipos y Clínicas', sub: 'Disponibilidad y capacidad operativa', tone: 'guinda', projects: ['P3', 'P6'] }
+  ];
+
+  var ENGINES = [
+    { id: 'E1', name: 'Pronóstico y estadística' },
+    { id: 'E2', name: 'Optimización' },
+    { id: 'E3', name: 'Machine learning y anomalías' },
+    { id: 'E4', name: 'PLN y visión computacional' }
+  ];
+
+  var SOURCES = [
+    { id: 'S1', name: 'ERP · Ventas · Compras' },
+    { id: 'S2', name: 'WMS · TMS · Pedidos' },
+    { id: 'S3', name: 'IoT · Sensores · GPS' },
+    { id: 'S4', name: 'Equipos y mantenimiento' },
+    { id: 'S5', name: 'Clínicas de hemodiálisis' },
+    { id: 'S6', name: 'Documentos y catálogo' }
+  ];
+
+  var PROJECTS = {
+    P1: { n: 1, domain: 'D1', short: 'Inventarios', name: 'Pronóstico de demanda y optimización de inventarios médicos',
+      caps: 'Ciencia de Datos · Estadística · Optimización', engines: ['E1', 'E2'], sources: ['S1', 'S2'],
+      problem: 'Exceso de inventario, faltantes, caducidades y compras deficientes.',
+      solution: 'Pronóstico por SKU a 7, 30, 60 y 90 días, y una recomendación de cuánto comprar, cuándo y dónde tenerlo.',
+      kpis: ['Fill rate', 'Stockout rate', 'Rotación', 'Días de inventario', 'Error de pronóstico', 'Inventario caducado'],
+      formula: 'Q* = f(D, lead time, stock, costo, caducidad, nivel de servicio)' },
+    P2: { n: 2, domain: 'D2', short: 'Control Tower logístico', name: 'Control Tower inteligente de logística médica',
+      caps: 'IA · Optimización · Software', engines: ['E2', 'E3'], sources: ['S2', 'S1'],
+      problem: 'Retrasos, rutas, entregas, almacenes y picking sin una vista que ayude a decidir.',
+      solution: 'Un motor de decisión que optimiza inventario, rutas, capacidad y prioridad médica con VRP, programación entera y metaheurísticas.',
+      kpis: ['Costo por pedido', 'Nivel de servicio', 'Retrasos', 'Utilización de flota'],
+      formula: 'min (α·Costo + β·Tiempo + γ·Retrasos + δ·Riesgo)' },
+    P3: { n: 3, domain: 'D3', short: 'Mantenimiento predictivo', name: 'Mantenimiento predictivo de equipo médico',
+      caps: 'ML · Estadística · Software', engines: ['E3'], sources: ['S4', 'S3'],
+      problem: 'Fallas, mantenimiento reactivo y baja disponibilidad de bombas de infusión y equipo hospitalario.',
+      solution: 'Probabilidad de falla por equipo y optimización de qué técnico enviar, qué pieza llevar y cuándo intervenir.',
+      kpis: ['MTBF', 'MTTR', 'Disponibilidad', 'Equipos críticos'],
+      formula: 'P(Falla t+h | X)' },
+    P4: { n: 4, domain: 'D2', short: 'Red fría', name: 'ColdChain AI: trazabilidad inteligente y red fría',
+      caps: 'IoT · Analítica · IA', engines: ['E1', 'E3'], sources: ['S3', 'S2'],
+      problem: 'Excursiones de temperatura, pérdida de producto y cumplimiento regulatorio.',
+      solution: 'Sensores IoT alimentan un motor de anomalías que avisa del riesgo de desviación térmica antes de que ocurra.',
+      kpis: ['Excursiones de temperatura', 'Riesgo por envío', 'Producto perdido'],
+      formula: 'RiskScore = f(T, H, t, ruta, equipo, producto)' },
+    P5: { n: 5, domain: 'D1', short: 'Licitaciones IA', name: 'MIUS Tender AI: análisis de licitaciones y ventas institucionales',
+      caps: 'PLN · LLM · Software', engines: ['E4'], sources: ['S6', 'S1'],
+      problem: 'Análisis manual de bases con cientos de páginas y miles de partidas.',
+      solution: 'Un LLM lee la licitación y la cruza con catálogo, inventario, precios, registros sanitarios y fichas técnicas.',
+      kpis: ['Coincidencia con catálogo', 'Riesgo de cumplimiento', 'Tiempo de respuesta'],
+      formula: 'Partida → coincidencia de catálogo → stock → documentación' },
+    P6: { n: 6, domain: 'D3', short: 'Hemodiálisis', name: 'Analítica operacional de unidades de hemodiálisis',
+      caps: 'Estadística · Optimización · BI', engines: ['E1', 'E2'], sources: ['S5', 'S4'],
+      problem: 'Utilización de máquinas, turnos, consumibles y capacidad sin optimizar.',
+      solution: 'Programación de sesiones, tiempos muertos y consumo de insumos con analítica operacional, sin IA diagnóstica.',
+      kpis: ['Utilización', 'Tiempos muertos', 'Ocupación', 'Consumo de insumos'],
+      formula: 'Utilización = horas operativas / horas disponibles' },
+    P7: { n: 7, domain: 'D2', short: 'Visión en almacén', name: 'Visión computacional para almacenes médicos',
+      caps: 'Visión computacional · OCR', engines: ['E4'], sources: ['S3', 'S2'],
+      problem: 'Errores de picking, lote, caducidad y conteo en una operación donde un error es equipo médico.',
+      solution: 'Una cámara con OCR y códigos QR valida producto, lote, caducidad y cantidad antes de que salga el pedido.',
+      kpis: ['Errores de picking', 'Lotes incorrectos', 'Exactitud de conteo'],
+      formula: 'Pedido vs. paquete: SKU · lote · caducidad · cantidad' },
+    P8: { n: 8, domain: 'D1', short: 'Inteligencia comercial', name: 'Inteligencia comercial y forecasting',
+      caps: 'BI · ML · Estadística', engines: ['E1', 'E3'], sources: ['S1'],
+      problem: 'Segmentación, ventas y recomendación de producto para hospitales, clínicas y farmacias.',
+      solution: 'Segmentación RFM, propensión de compra, siguiente mejor producto y predicción de abandono.',
+      kpis: ['Propensión de compra', 'Abandono (churn)', 'Margen por segmento'],
+      formula: 'P(Compra SKU i | Cliente j) · P(Churn)' }
+  };
+
+  var ORDER = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
+  var DOMAIN_BY_ID = {}; DOMAINS.forEach(function (d) { DOMAIN_BY_ID[d.id] = d; });
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function chip(kind, o) { return '<span class="hti-chip" data-kind="' + kind + '" data-id="' + o.id + '">' + esc(o.name) + '</span>'; }
+
+  function projBtn(id, long) {
+    var p = PROJECTS[id], d = DOMAIN_BY_ID[p.domain];
+    return '<button type="button" class="hti-proj tone-' + d.tone + '" data-kind="proj" data-id="' + id + '" aria-pressed="false">' +
+      '<span class="hti-num">' + p.n + '</span><span class="hti-pt"><b>' + esc(p.short) + '</b>' +
+      '<small>' + esc(long ? p.name : p.caps) + '</small></span>' +
+      (p.n <= 3 ? '<i class="hti-top3" title="Propuesta para la primera reunión"></i>' : '') + '</button>';
+  }
+
+  function arqHTML() {
+    var h = '<div class="hti-row"><div class="hti-tag">Decisión</div>' +
+      '<div class="hti-tower" data-kind="tower"><div class="hti-tower-t"><b>Health Tower Intelligence</b>' +
+      '<small>Decision Intelligence de la plataforma MIUS</small></div>' +
+      '<div class="hti-tower-c"><span>KPIs en vivo</span><span>Alertas de riesgo</span><span>Recomendaciones</span><span>Priorización clínica</span></div></div></div>';
+    h += '<div class="hti-row"><div class="hti-tag">8 proyectos</div><div class="hti-domains">';
+    DOMAINS.forEach(function (d) {
+      h += '<section class="hti-domain tone-' + d.tone + '" data-kind="domain" data-id="' + d.id + '">' +
+        '<header><b>' + esc(d.name) + '</b><small>' + esc(d.sub) + '</small></header><div class="hti-projs">';
+      d.projects.forEach(function (pid) { h += projBtn(pid, false); });
+      h += '</div></section>';
+    });
+    h += '</div></div>';
+    h += '<div class="hti-row"><div class="hti-tag">Motores</div><div class="hti-engines">' + ENGINES.map(function (e) { return chip('engine', e); }).join('') + '</div></div>';
+    h += '<div class="hti-row"><div class="hti-tag">Datos</div><div class="hti-data"><div class="hti-data-t">Plataforma de datos e integración</div><div class="hti-sources">' +
+      SOURCES.map(function (s) { return chip('source', s); }).join('') + '</div></div></div>';
+    return h;
+  }
+
+  function treeHTML(compact) {
+    var h = '<div class="hti-troot" data-kind="root"><b>MIUS Health Intelligence Platform</b>' +
+      '<small>Una plataforma, tres dominios, ocho proyectos</small></div><div class="hti-tdomains">';
+    DOMAINS.forEach(function (d) {
+      h += '<div class="hti-tcol"><div class="hti-tnode tone-' + d.tone + '" data-kind="domain" data-id="' + d.id + '"><b>' + esc(d.name) + '</b><small>' + esc(d.sub) + '</small></div><div class="hti-tleaves">';
+      d.projects.forEach(function (pid) { h += projBtn(pid, !compact); });
+      h += '</div></div>';
+    });
+    h += '</div><div class="hti-tdata"><div class="hti-data-t">Plataforma de datos transversal</div><div class="hti-sources">' +
+      SOURCES.map(function (s) { return chip('source', s); }).join('') + '</div></div>';
+    return h;
+  }
+
+  function panelHTML(id) {
+    var p = PROJECTS[id], d = DOMAIN_BY_ID[p.domain];
+    return '<div class="hti-pn-head tone-' + d.tone + '"><span class="hti-num">' + p.n + '</span><div><div class="hti-pn-dom">' + esc(d.name) +
+      (p.n <= 3 ? ' · <em>Primera reunión</em>' : '') + '</div><div class="hti-pn-name">' + esc(p.name) + '</div><div class="hti-pn-caps">' + esc(p.caps) + '</div></div></div>' +
+      '<div class="hti-pn-body"><div><h4>Problema</h4><p>' + esc(p.problem) + '</p></div><div><h4>Solución CIMAT</h4><p>' + esc(p.solution) + '</p></div></div>' +
+      '<div class="hti-pn-kpi"><h4>KPIs</h4><div class="hti-kpis">' + p.kpis.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</div><code>' + esc(p.formula) + '</code></div>';
+  }
+
+  function mount(root, opts) {
+    opts = opts || {};
+    var view = opts.view === 'tree' ? 'tree' : 'arq';
+    var reduce = g.matchMedia && g.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var auto = opts.autoplay !== false && !reduce, timer = null, idx = 0, active = null;
+    root.classList.add('hti', 'hti-' + view);
+    if (opts.compact) root.classList.add('hti-compact');
+    root.innerHTML = '<div class="hti-stage">' + (view === 'tree' ? treeHTML(!!opts.compact) : arqHTML()) +
+      '<svg class="hti-links" aria-hidden="true"></svg></div>' +
+      '<div class="hti-legend"><i></i>Prioridad 1 a 3: propuesta para la primera reunión</div>' +
+      '<div class="hti-panel" aria-live="polite"></div>' +
+      '<button type="button" class="hti-play" aria-pressed="' + auto + '"></button>';
+    var stage = root.querySelector('.hti-stage'), svg = root.querySelector('.hti-links');
+    var panel = root.querySelector('.hti-panel'), play = root.querySelector('.hti-play');
+
+    function q(sel) { return Array.prototype.slice.call(stage.querySelectorAll(sel)); }
+    function node(kind, id) { return stage.querySelector('[data-kind="' + kind + '"][data-id="' + id + '"]'); }
+    function geom(el) {
+      var s = stage.getBoundingClientRect(), r = el.getBoundingClientRect(), k = s.width / stage.offsetWidth || 1;
+      return { l: (r.left - s.left) / k, t: (r.top - s.top) / k, w: r.width / k, h: r.height / k };
+    }
+    function path(x1, y1, x2, y2, cls, tone, vertical) {
+      var p = document.createElementNS(NS, 'path'), m = (y1 + y2) / 2, d;
+      d = vertical === false ? 'M' + x1 + ' ' + y1 + ' L' + x1 + ' ' + y2 + ' L' + x2 + ' ' + y2
+        : 'M' + x1 + ' ' + y1 + ' C' + x1 + ' ' + m + ' ' + x2 + ' ' + m + ' ' + x2 + ' ' + y2;
+      p.setAttribute('d', d); p.setAttribute('class', cls + (tone ? ' tone-' + tone : ''));
+      if (cls.indexOf('hot') > -1) p.setAttribute('pathLength', '1');
+      svg.appendChild(p); return p;
+    }
+    function bottomC(el) { var o = geom(el); return { x: o.l + o.w / 2, y: o.t + o.h }; }
+    function topC(el) { var o = geom(el); return { x: o.l + o.w / 2, y: o.t }; }
+
+    function drawLinks() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      if (!stage.offsetWidth || getComputedStyle(svg).display === 'none') return;
+      var p = active && PROJECTS[active], dom = p && DOMAIN_BY_ID[p.domain];
+      if (view === 'tree') {
+        var rootB = bottomC(stage.querySelector('[data-kind="root"]'));
+        DOMAINS.forEach(function (d) {
+          var dn = node('domain', d.id), dt = topC(dn), dg = geom(dn);
+          path(rootB.x, rootB.y, dt.x, dt.y, 'base');
+          d.projects.forEach(function (pid) {
+            var lg = geom(node('proj', pid)), x0 = dg.l + 16;
+            path(x0, dg.t + dg.h, lg.l, lg.t + lg.h / 2, 'base', '', false);
+          });
+        });
+        if (p) {
+          var dn2 = node('domain', dom.id), dt2 = topC(dn2), dg2 = geom(dn2), lg2 = geom(node('proj', active));
+          path(rootB.x, rootB.y, dt2.x, dt2.y, 'hot', dom.tone);
+          path(dg2.l + 16, dg2.t + dg2.h, lg2.l, lg2.t + lg2.h / 2, 'hot', dom.tone, false);
+        }
+        return;
+      }
+      if (!p) return;
+      var dEl = node('domain', dom.id), tower = stage.querySelector('[data-kind="tower"]');
+      var dt3 = topC(dEl), tb = bottomC(tower), db = bottomC(dEl);
+      path(dt3.x, dt3.y, Math.max(geom(tower).l + 40, Math.min(dt3.x, geom(tower).l + geom(tower).w - 40)), tb.y, 'hot', dom.tone);
+      p.engines.forEach(function (eid) {
+        var eT = topC(node('engine', eid));
+        path(db.x, db.y, eT.x, eT.y, 'hot', dom.tone);
+        p.sources.forEach(function (sid) { var sT = topC(node('source', sid)), eB = bottomC(node('engine', eid)); path(sT.x, sT.y, eB.x, eB.y, 'hot', dom.tone); });
+      });
+    }
+
+    function setActive(id) {
+      active = id;
+      var p = PROJECTS[id], rel = {};
+      rel['proj:' + id] = 1; rel['domain:' + p.domain] = 1;
+      p.engines.forEach(function (e) { rel['engine:' + e] = 1; });
+      p.sources.forEach(function (s) { rel['source:' + s] = 1; });
+      q('[data-kind]').forEach(function (el) {
+        var k = el.getAttribute('data-kind'), key = k + ':' + el.getAttribute('data-id');
+        var on = k === 'tower' || k === 'root' || rel[key];
+        el.classList.toggle('is-on', !!on); el.classList.toggle('is-dim', !on);
+        if (k === 'proj') { el.classList.toggle('is-active', el.getAttribute('data-id') === id); el.setAttribute('aria-pressed', el.getAttribute('data-id') === id); }
+      });
+      root.setAttribute('data-tone', DOMAIN_BY_ID[p.domain].tone);
+      panel.innerHTML = panelHTML(id);
+      panel.classList.remove('hti-swap'); void panel.offsetWidth; panel.classList.add('hti-swap');
+      drawLinks();
+    }
+
+    function tick() { idx = (idx + 1) % ORDER.length; setActive(ORDER[idx]); }
+    function start() { if (auto && !timer) timer = setInterval(function () { if (!document.hidden) tick(); }, opts.interval || 4200); syncPlay(); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } syncPlay(); }
+    function syncPlay() {
+      play.setAttribute('aria-pressed', !!timer);
+      play.textContent = timer ? 'Pausar recorrido' : 'Reanudar recorrido';
+      play.hidden = reduce;
+    }
+    function userPick(id) { auto = false; stop(); idx = ORDER.indexOf(id); setActive(id); }
+
+    stage.addEventListener('pointerover', function (e) { var b = e.target.closest('.hti-proj'); if (b && stage.contains(b) && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
+    stage.addEventListener('click', function (e) { var b = e.target.closest('.hti-proj'); if (b) userPick(b.getAttribute('data-id')); });
+    stage.addEventListener('focusin', function (e) { var b = e.target.closest('.hti-proj'); if (b && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
+    play.addEventListener('click', function () { if (timer) { auto = false; stop(); } else { auto = true; start(); } });
+
+    if (g.ResizeObserver) new ResizeObserver(function () { drawLinks(); }).observe(stage);
+    g.addEventListener('resize', drawLinks);
+    setActive(opts.initial || 'P1');
+    syncPlay();
+    if (opts.start !== false) start();
+    return { start: start, stop: stop, redraw: drawLinks, select: userPick };
+  }
+
+  g.HTI = { mount: mount, data: { DOMAINS: DOMAINS, PROJECTS: PROJECTS, ENGINES: ENGINES, SOURCES: SOURCES } };
+})(window);
+
+</script>
+<script>
+(function () {
+  var arq = HTI.mount(document.getElementById('d-arq'), { view: 'arq' });
+  var tree = HTI.mount(document.getElementById('d-tree'), { view: 'tree', initial: 'P3', start: false });
+  var map = { arq: { tab: 'tab-arq', view: 'v-arq', api: arq, hash: 'arquitectura' }, tree: { tab: 'tab-tree', view: 'v-tree', api: tree, hash: 'proyectos' } };
+  function show(key, silent) {
+    Object.keys(map).forEach(function (k) {
+      var on = k === key, m = map[k];
+      document.getElementById(m.tab).setAttribute('aria-selected', on);
+      document.getElementById(m.view).hidden = !on;
+      if (on) { m.api.redraw(); m.api.start(); } else { m.api.stop(); }
+    });
+    if (!silent) { try { history.replaceState(null, '', '#' + map[key].hash); } catch (e) {} }
+  }
+  document.getElementById('tab-arq').addEventListener('click', function () { show('arq'); });
+  document.getElementById('tab-tree').addEventListener('click', function () { show('tree'); });
+  var h = ''; try { h = location.hash.replace('#', ''); } catch (e) {}
+  show(h === 'proyectos' ? 'tree' : 'arq', true);
+})();
+</script>
