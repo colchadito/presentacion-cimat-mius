@@ -159,7 +159,44 @@
 /* Estado inicial: todo encendido */
 .hti-all .hti-chip{background:var(--slate);color:var(--on-slate);border-color:var(--slate);font-weight:600}
 .hti-all .hti-links .base{stroke:var(--muted);stroke-width:1.8;opacity:.55}
-.hti-panel.is-idle{display:flex;flex-direction:column;justify-content:center;gap:6px;border-left-color:var(--guinda)}
-.hti-panel.is-idle p{font-size:calc(var(--fs) + 2.5px);line-height:1.5;max-width:104ch}
-.hti-panel.is-idle small{font-size:var(--fs-s)}
-.hti-compact .hti-panel{min-height:116px}
+.hti-compact .hti-panel{min-height:124px;margin-top:12px}
+.hti .hti-panel.is-idle{position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 22px;align-items:center;padding:12px 22px 12px 30px;border:1px solid var(--line);
+  background:radial-gradient(120% 150% at 100% 0%,color-mix(in srgb,var(--verde) 11%,transparent),transparent 58%),radial-gradient(90% 130% at 0% 100%,color-mix(in srgb,var(--guinda) 8%,transparent),transparent 62%),var(--surface)}
+.hti .hti-panel.is-idle::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(180deg,var(--guinda),var(--dorado) 52%,var(--verde))}
+.hti-panel.is-idle .idle-ico{width:78px;height:78px}
+.hti-panel.is-idle .idle-ico svg{display:block;width:100%;height:100%;overflow:visible}
+.idle-ico rect{transform-box:fill-box;transform-origin:center}
+.idle-ico .slot{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:4 4;opacity:.7}
+.idle-ico .mA{fill:var(--guinda)}.idle-ico .mB{fill:var(--verde);animation:idle-b 6s ease-in-out infinite}
+.idle-ico .mC{fill:var(--slate)}.idle-ico .mD{fill:var(--dorado);animation:idle-d 6s ease-in-out infinite}
+@keyframes idle-d{0%,20%{transform:translate(0,0) scale(1);opacity:1}36%,56%{transform:translate(24px,24px) scale(.8);opacity:.25}74%,100%{transform:translate(0,0) scale(1);opacity:1}}
+@keyframes idle-b{0%,48%{transform:none}58%{transform:rotate(9deg) scale(1.07)}70%,100%{transform:none}}
+.hti-panel.is-idle .idle-body{display:grid;gap:6px;min-width:0}
+.hti-panel.is-idle .idle-lead{margin:0;font-size:18px;line-height:1.46;font-weight:500;color:var(--fg);letter-spacing:-.003em}
+.hti-panel.is-idle .idle-lead b{font-weight:800}
+.hti-panel.is-idle .k1{color:var(--guinda);font-size:19.5px}
+.hti-panel.is-idle .k3{color:var(--guinda)}
+.hti-panel.is-idle .k2,.hti-panel.is-idle .k4{color:var(--verde);padding:0 3px;background:linear-gradient(transparent 58%,color-mix(in srgb,var(--dorado) 42%,transparent) 58%) no-repeat;background-size:100% 100%;border-radius:3px}
+.hti-panel.is-idle .dm{font-weight:700;white-space:nowrap}
+.hti-panel.is-idle .dm::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%;background:currentColor;vertical-align:1px}
+.hti-panel.is-idle .d1{color:var(--dorado-ink,#8A6D1E)}.hti-panel.is-idle .d2{color:var(--verde)}.hti-panel.is-idle .d3{color:var(--guinda)}
+.hti-panel.is-idle .idle-dyn{margin:0;font-size:15px;line-height:1.7;color:var(--fg)}
+.hti-panel.is-idle .idle-dyn .tag{color:var(--guinda);font-weight:800;font-size:15.5px}
+.hti-panel.is-idle .op{display:inline-flex;align-items:center;gap:5px;padding:0 10px 0 4px;border-radius:999px;font-weight:700;line-height:1.5;border:1.5px solid currentColor;background:color-mix(in srgb,currentColor 9%,transparent)}
+.hti-panel.is-idle .op i{font-style:normal;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:currentColor;font-size:12px;font-weight:800;line-height:1}
+.hti-panel.is-idle .op i::before{content:attr(data-g);color:#fff}
+.hti-panel.is-idle .op.add{color:var(--verde)}.hti-panel.is-idle .op.adj{color:var(--dorado-ink,#8A6D1E)}.hti-panel.is-idle .op.del{color:var(--guinda)}
+.hti-panel.is-idle .idle-hint{margin:2px 0 0;display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hti-panel.is-idle .idle-hint .cur{flex:none;color:var(--guinda);animation:idle-tap 2.8s ease-in-out infinite}
+@keyframes idle-tap{0%,58%,100%{transform:translate(0,0) scale(1)}70%{transform:translate(3px,3px) scale(.86)}82%{transform:translate(0,0) scale(1)}}
+.hti-panel.is-idle.hti-swap .idle-body>*{animation:idle-up .65s cubic-bezier(.2,.7,.2,1) both}
+.hti-panel.is-idle.hti-swap .idle-body>*:nth-child(2){animation-delay:.14s}
+.hti-panel.is-idle.hti-swap .idle-body>*:nth-child(3){animation-delay:.28s}
+.hti-panel.is-idle.hti-swap .k2,.hti-panel.is-idle.hti-swap .k4{background-size:0 100%;animation:idle-mark .9s cubic-bezier(.3,.7,.2,1) .55s forwards}
+@keyframes idle-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes idle-mark{to{background-size:100% 100%}}
+@media (prefers-reduced-motion:reduce){
+  .idle-ico .mB,.idle-ico .mD,.hti-panel.is-idle .idle-hint .cur{animation:none}
+  .hti-panel.is-idle.hti-swap .idle-body>*{animation:none}
+  .hti-panel.is-idle.hti-swap .k2,.hti-panel.is-idle.hti-swap .k4{animation:none;background-size:100% 100%}
+}

@@ -6,7 +6,7 @@
   --slate:#2F3733;--on-slate:#F4F6F5;--on-slate-2:#B9C4BE;--on-slate-3:rgba(244,246,245,.38);
   --guinda:#691035;--guinda-2:#5F1733;--on-guinda:#FFFFFF;--guinda-ink:#691035;
   --verde:#155B4E;--verde-2:#2C5B4D;--on-verde:#FFFFFF;
-  --dorado:#A98A33;--on-dorado:#1E1A0D;--arena:#D9CFC4;--on-arena:#3A3A3A;
+  --dorado:#A98A33;--dorado-ink:#8A6D1E;--on-dorado:#1E1A0D;--arena:#D9CFC4;--on-arena:#3A3A3A;
   --stage-w:1280;--stage-h:720;
 }
 *{box-sizing:border-box}
@@ -226,8 +226,8 @@ h1,h2,h3,h4{margin:0}
 .sp .kicker{margin-bottom:4px}
 .sp .title{font-size:31px}
 .sp .lead{font-size:14.5px;margin-top:6px;line-height:1.45}
-.sp .dg{position:absolute;left:44px;right:44px;top:150px}
-.sp .hti-arq.hti-compact .hti-stage{row-gap:30px}
+.sp .dg{position:absolute;left:44px;right:44px;top:146px}
+.sp .hti-arq.hti-compact .hti-stage{row-gap:26px}
 .sp .hti{--fs:12.5px;--fs-s:10.5px}
 
 /* UI del visor */

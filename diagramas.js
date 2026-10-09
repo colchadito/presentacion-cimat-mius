@@ -205,7 +205,7 @@
       q('[data-kind]').forEach(function (el) { el.classList.remove('is-on', 'is-dim', 'is-active'); if (el.getAttribute('data-kind') === 'proj') el.setAttribute('aria-pressed', 'false'); });
       root.classList.add('hti-all'); root.removeAttribute('data-tone');
       panel.classList.add('is-idle');
-      panel.innerHTML = '<p>' + esc(opts.idleText || '') + '</p><small>Pasa el cursor o toca un módulo para ver cómo se conecta.</small>';
+      panel.innerHTML = opts.idleHTML || ('<p>' + esc(opts.idleText || '') + '</p><small>Pasa el cursor o toca un módulo para ver cómo se conecta.</small>');
       panel.classList.remove('hti-swap'); void panel.offsetWidth; panel.classList.add('hti-swap');
       drawLinks();
     }
