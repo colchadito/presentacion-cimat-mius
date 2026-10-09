@@ -8,10 +8,7 @@ Presentación dinámica en HTML con el formato institucional del CIMAT (paleta g
 
 ## Contenido
 
-15 diapositivas: las 13 del catálogo institucional del CIMAT y, en las posiciones 11 y 12, dos diagramas interactivos de la plataforma:
-
-- **Arquitectura:** fuentes de datos, motores analíticos, ocho proyectos en tres dominios y una torre de control.
-- **Del programa general a cada proyecto:** árbol de los ocho proyectos con su detalle (problema, solución, KPIs).
+14 diapositivas: las 13 del catálogo institucional del CIMAT y, en la posición 11, el diagrama interactivo de la plataforma **Health Tower Intelligence**: una plataforma modular donde los módulos se pueden sumar, ajustar o retirar, con su capa de datos, motores analíticos y torre de control. Al pasar el cursor por un módulo se muestra su detalle (problema, solución, KPIs).
 
 ## Controles
 
@@ -27,7 +24,7 @@ También funciona con gestos táctiles y rueda del ratón. Al abrir `index.html#
 ## Estructura
 
 ```
-index.html            marcado de las 15 diapositivas
+index.html            marcado de las 14 diapositivas
 deck.css / deck.js    estilo institucional y visor (escala 1280×720, navegación)
 diagramas.css / .js   diagramas interactivos de la plataforma
 assets/               imágenes optimizadas (WebP)

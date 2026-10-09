@@ -11,13 +11,12 @@
   function fit() {
     var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
     stage.style.setProperty('--s', s);
-    if (dg.arq) dg.arq.redraw(); if (dg.tree) dg.tree.redraw();
+    if (dg.platform) dg.platform.redraw();
   }
 
   // Diagramas interactivos
   var dg = {};
-  dg.arq = HTI.mount(document.getElementById('dg-arq'), { view: 'arq', compact: true, start: false });
-  dg.tree = HTI.mount(document.getElementById('dg-tree'), { view: 'tree', compact: true, start: false, initial: 'P3' });
+  dg.platform = HTI.mount(document.getElementById('dg-platform'), { view: 'arq', compact: true, plain: true, start: false });
 
   // Números de página
   slides.forEach(function (s, i) {
@@ -50,9 +49,8 @@
     var s = slides[i];
     Array.prototype.forEach.call(s.querySelectorAll('[data-count]'), function (el) { setTimeout(function () { countUp(el); }, 500); });
     var id = s.id;
-    dg.arq.stop(); dg.tree.stop();
-    if (id === 'sl-arq') { dg.arq.redraw(); setTimeout(function () { dg.arq.redraw(); dg.arq.start(); }, 700); }
-    if (id === 'sl-tree') { dg.tree.redraw(); setTimeout(function () { dg.tree.redraw(); dg.tree.start(); }, 700); }
+    dg.platform.stop();
+    if (id === 'sl-platform') { dg.platform.redraw(); setTimeout(function () { dg.platform.redraw(); dg.platform.start(); }, 700); }
     Array.prototype.forEach.call(ovg.children, function (b, k) { b.classList.toggle('cur', k === i); });
   }
 

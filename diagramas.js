@@ -83,24 +83,24 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function chip(kind, o) { return '<span class="hti-chip" data-kind="' + kind + '" data-id="' + o.id + '">' + esc(o.name) + '</span>'; }
 
-  function projBtn(id, long) {
+  function projBtn(id, long, plain) {
     var p = PROJECTS[id], d = DOMAIN_BY_ID[p.domain];
     return '<button type="button" class="hti-proj tone-' + d.tone + '" data-kind="proj" data-id="' + id + '" aria-pressed="false">' +
-      '<span class="hti-num">' + p.n + '</span><span class="hti-pt"><b>' + esc(p.short) + '</b>' +
+      '<span class="hti-num">' + (plain ? '' : p.n) + '</span><span class="hti-pt"><b>' + esc(p.short) + '</b>' +
       '<small>' + esc(long ? p.name : p.caps) + '</small></span>' +
-      (p.n <= 3 ? '<i class="hti-top3" title="Propuesta para la primera reunión"></i>' : '') + '</button>';
+      (!plain && p.n <= 3 ? '<i class="hti-top3" title="Propuesta para la primera reunión"></i>' : '') + '</button>';
   }
 
-  function arqHTML() {
+  function arqHTML(plain) {
     var h = '<div class="hti-row"><div class="hti-tag">Decisión</div>' +
       '<div class="hti-tower" data-kind="tower"><div class="hti-tower-t"><b>Health Tower Intelligence</b>' +
-      '<small>Decision Intelligence de la plataforma MIUS</small></div>' +
+      '<small>' + (plain ? 'Plataforma modular de datos y analítica para MIUS' : 'Decision Intelligence de la plataforma MIUS') + '</small></div>' +
       '<div class="hti-tower-c"><span>KPIs en vivo</span><span>Alertas de riesgo</span><span>Recomendaciones</span><span>Priorización clínica</span></div></div></div>';
-    h += '<div class="hti-row"><div class="hti-tag">8 proyectos</div><div class="hti-domains">';
+    h += '<div class="hti-row"><div class="hti-tag">' + (plain ? 'Módulos' : '8 proyectos') + '</div><div class="hti-domains">';
     DOMAINS.forEach(function (d) {
       h += '<section class="hti-domain tone-' + d.tone + '" data-kind="domain" data-id="' + d.id + '">' +
         '<header><b>' + esc(d.name) + '</b><small>' + esc(d.sub) + '</small></header><div class="hti-projs">';
-      d.projects.forEach(function (pid) { h += projBtn(pid, false); });
+      d.projects.forEach(function (pid) { h += projBtn(pid, false, plain); });
       h += '</div></section>';
     });
     h += '</div></div>';
@@ -123,24 +123,25 @@
     return h;
   }
 
-  function panelHTML(id) {
+  function panelHTML(id, plain) {
     var p = PROJECTS[id], d = DOMAIN_BY_ID[p.domain];
-    return '<div class="hti-pn-head tone-' + d.tone + '"><span class="hti-num">' + p.n + '</span><div><div class="hti-pn-dom">' + esc(d.name) +
-      (p.n <= 3 ? ' · <em>Primera reunión</em>' : '') + '</div><div class="hti-pn-name">' + esc(p.name) + '</div><div class="hti-pn-caps">' + esc(p.caps) + '</div></div></div>' +
+    return '<div class="hti-pn-head tone-' + d.tone + '"><span class="hti-num">' + (plain ? '' : p.n) + '</span><div><div class="hti-pn-dom">' + esc(d.name) +
+      (!plain && p.n <= 3 ? ' · <em>Primera reunión</em>' : '') + '</div><div class="hti-pn-name">' + esc(p.name) + '</div><div class="hti-pn-caps">' + esc(p.caps) + '</div></div></div>' +
       '<div class="hti-pn-body"><div><h4>Problema</h4><p>' + esc(p.problem) + '</p></div><div><h4>Solución CIMAT</h4><p>' + esc(p.solution) + '</p></div></div>' +
       '<div class="hti-pn-kpi"><h4>KPIs</h4><div class="hti-kpis">' + p.kpis.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</div><code>' + esc(p.formula) + '</code></div>';
   }
 
   function mount(root, opts) {
     opts = opts || {};
-    var view = opts.view === 'tree' ? 'tree' : 'arq';
+    var view = opts.view === 'tree' ? 'tree' : 'arq', plain = !!opts.plain;
+    root.classList.toggle('hti-plain', plain);
     var reduce = g.matchMedia && g.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var auto = opts.autoplay !== false && !reduce, timer = null, idx = 0, active = null;
     root.classList.add('hti', 'hti-' + view);
     if (opts.compact) root.classList.add('hti-compact');
-    root.innerHTML = '<div class="hti-stage">' + (view === 'tree' ? treeHTML(!!opts.compact) : arqHTML()) +
+    root.innerHTML = '<div class="hti-stage">' + (view === 'tree' ? treeHTML(!!opts.compact) : arqHTML(plain)) +
       '<svg class="hti-links" aria-hidden="true"></svg></div>' +
-      '<div class="hti-legend"><i></i>Prioridad 1 a 3: propuesta para la primera reunión</div>' +
+      (plain ? '' : '<div class="hti-legend"><i></i>Prioridad 1 a 3: propuesta para la primera reunión</div>') +
       '<div class="hti-panel" aria-live="polite"></div>' +
       '<button type="button" class="hti-play" aria-pressed="' + auto + '"></button>';
     var stage = root.querySelector('.hti-stage'), svg = root.querySelector('.hti-links');
@@ -184,6 +185,10 @@
         }
         return;
       }
+      if (plain) {
+        var tw = stage.querySelector('[data-kind="tower"]'), twb = bottomC(tw);
+        DOMAINS.forEach(function (d) { var tt = topC(node('domain', d.id)); path(twb.x, twb.y, tt.x, tt.y, 'base'); });
+      }
       if (!p) return;
       var dEl = node('domain', dom.id), tower = stage.querySelector('[data-kind="tower"]');
       var dt3 = topC(dEl), tb = bottomC(tower), db = bottomC(dEl);
@@ -208,7 +213,7 @@
         if (k === 'proj') { el.classList.toggle('is-active', el.getAttribute('data-id') === id); el.setAttribute('aria-pressed', el.getAttribute('data-id') === id); }
       });
       root.setAttribute('data-tone', DOMAIN_BY_ID[p.domain].tone);
-      panel.innerHTML = panelHTML(id);
+      panel.innerHTML = panelHTML(id, plain);
       panel.classList.remove('hti-swap'); void panel.offsetWidth; panel.classList.add('hti-swap');
       drawLinks();
     }
