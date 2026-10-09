@@ -16,7 +16,7 @@
 
   // Diagramas interactivos
   var dg = {};
-  dg.platform = HTI.mount(document.getElementById('dg-platform'), { view: 'arq', compact: true, plain: true, start: false });
+  dg.platform = HTI.mount(document.getElementById('dg-platform'), { view: 'arq', compact: true, plain: true, static: true, start: false, idleText: 'Una plataforma modular que integra los datos de la operación (inventario, logística, equipos y clínicas) y los convierte en decisiones mediante analítica, optimización e inteligencia artificial. Es dinámica: sus módulos se pueden sumar, ajustar o retirar conforme cambien las necesidades de MIUS.' });
 
 
   // Portada: red de nodos, símbolos matemáticos y parallax

@@ -226,7 +226,8 @@ h1,h2,h3,h4{margin:0}
 .sp .kicker{margin-bottom:4px}
 .sp .title{font-size:31px}
 .sp .lead{font-size:14.5px;margin-top:6px;line-height:1.45}
-.sp .dg{position:absolute;left:44px;right:44px;top:178px}
+.sp .dg{position:absolute;left:44px;right:44px;top:150px}
+.sp .hti-arq.hti-compact .hti-stage{row-gap:30px}
 .sp .hti{--fs:12.5px;--fs-s:10.5px}
 
 /* UI del visor */

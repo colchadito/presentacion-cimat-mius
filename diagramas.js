@@ -136,7 +136,7 @@
     var view = opts.view === 'tree' ? 'tree' : 'arq', plain = !!opts.plain;
     root.classList.toggle('hti-plain', plain);
     var reduce = g.matchMedia && g.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var auto = opts.autoplay !== false && !reduce, timer = null, idx = 0, active = null;
+    var isStatic = !!opts.static, auto = opts.autoplay !== false && !reduce && !isStatic, timer = null, idx = 0, active = null, pinned = null;
     root.classList.add('hti', 'hti-' + view);
     if (opts.compact) root.classList.add('hti-compact');
     root.innerHTML = '<div class="hti-stage">' + (view === 'tree' ? treeHTML(!!opts.compact) : arqHTML(plain)) +
@@ -200,8 +200,20 @@
       });
     }
 
+    function setIdle() {
+      active = null;
+      q('[data-kind]').forEach(function (el) { el.classList.remove('is-on', 'is-dim', 'is-active'); if (el.getAttribute('data-kind') === 'proj') el.setAttribute('aria-pressed', 'false'); });
+      root.classList.add('hti-all'); root.removeAttribute('data-tone');
+      panel.classList.add('is-idle');
+      panel.innerHTML = '<p>' + esc(opts.idleText || '') + '</p><small>Pasa el cursor o toca un módulo para ver cómo se conecta.</small>';
+      panel.classList.remove('hti-swap'); void panel.offsetWidth; panel.classList.add('hti-swap');
+      drawLinks();
+    }
+
     function setActive(id) {
+      if (id === null || id === undefined) { setIdle(); return; }
       active = id;
+      root.classList.remove('hti-all'); panel.classList.remove('is-idle');
       var p = PROJECTS[id], rel = {};
       rel['proj:' + id] = 1; rel['domain:' + p.domain] = 1;
       p.engines.forEach(function (e) { rel['engine:' + e] = 1; });
@@ -224,18 +236,33 @@
     function syncPlay() {
       play.setAttribute('aria-pressed', !!timer);
       play.textContent = timer ? 'Pausar recorrido' : 'Reanudar recorrido';
-      play.hidden = reduce;
+      play.hidden = reduce || isStatic;
     }
     function userPick(id) { auto = false; stop(); idx = ORDER.indexOf(id); setActive(id); }
 
-    stage.addEventListener('pointerover', function (e) { var b = e.target.closest('.hti-proj'); if (b && stage.contains(b) && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
-    stage.addEventListener('click', function (e) { var b = e.target.closest('.hti-proj'); if (b) userPick(b.getAttribute('data-id')); });
-    stage.addEventListener('focusin', function (e) { var b = e.target.closest('.hti-proj'); if (b && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
+    if (isStatic) {
+      var show = function (id) { if (id !== active) setActive(id); };
+      stage.addEventListener('pointerover', function (e) { var b = e.target.closest('.hti-proj'); show(b ? b.getAttribute('data-id') : pinned); });
+      stage.addEventListener('pointerleave', function () { show(pinned); });
+      stage.addEventListener('focusin', function (e) { var b = e.target.closest('.hti-proj'); if (b) show(b.getAttribute('data-id')); });
+      stage.addEventListener('focusout', function (e) { if (!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('.hti-proj')) show(pinned); });
+      root.addEventListener('click', function (e) {
+        if (e.target.closest('.hti-panel')) return;
+        var b = e.target.closest('.hti-proj');
+        pinned = b && b.getAttribute('data-id') !== pinned ? b.getAttribute('data-id') : null;
+        show(pinned);
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pinned) { pinned = null; show(null); } });
+    } else {
+      stage.addEventListener('pointerover', function (e) { var b = e.target.closest('.hti-proj'); if (b && stage.contains(b) && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
+      stage.addEventListener('click', function (e) { var b = e.target.closest('.hti-proj'); if (b) userPick(b.getAttribute('data-id')); });
+      stage.addEventListener('focusin', function (e) { var b = e.target.closest('.hti-proj'); if (b && b.getAttribute('data-id') !== active) userPick(b.getAttribute('data-id')); });
+    }
     play.addEventListener('click', function () { if (timer) { auto = false; stop(); } else { auto = true; start(); } });
 
     if (g.ResizeObserver) new ResizeObserver(function () { drawLinks(); }).observe(stage);
     g.addEventListener('resize', drawLinks);
-    setActive(opts.initial || 'P1');
+    setActive(isStatic ? null : (opts.initial || 'P1'));
     syncPlay();
     if (opts.start !== false) start();
     return { start: start, stop: stop, redraw: drawLinks, select: userPick };

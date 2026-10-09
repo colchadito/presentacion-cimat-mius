@@ -155,3 +155,11 @@
 .hti-plain .hti-pn-head .hti-num{width:14px;height:14px;margin-top:5px}
 .hti-plain.hti-compact .hti-pn-head .hti-num{width:14px;height:14px}
 .hti-plain .hti-top3{display:none}
+
+/* Estado inicial: todo encendido */
+.hti-all .hti-chip{background:var(--slate);color:var(--on-slate);border-color:var(--slate);font-weight:600}
+.hti-all .hti-links .base{stroke:var(--muted);stroke-width:1.8;opacity:.55}
+.hti-panel.is-idle{display:flex;flex-direction:column;justify-content:center;gap:6px;border-left-color:var(--guinda)}
+.hti-panel.is-idle p{font-size:calc(var(--fs) + 2.5px);line-height:1.5;max-width:104ch}
+.hti-panel.is-idle small{font-size:var(--fs-s)}
+.hti-compact .hti-panel{min-height:116px}
